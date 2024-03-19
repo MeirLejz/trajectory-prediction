@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 
 # simulation parameters
-dt = 0.1 # seconds. Time step
+dt = 1 # seconds. Time step
 T = 60*60 # seconds. Period of the orbit
 n = 2*np.pi/T # rad/s. Orbital rate
 N_TRAJ = 1 # Number of trajectories
@@ -62,7 +62,7 @@ class CWSimulator():
         print(f'X_t shape: {X_t.shape}')
         return X_t
 
-    def create_training_data(self, X_t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def create_training_data(self, X_t: np.ndarray=0) -> tuple[np.ndarray, np.ndarray]:
 
         # rnn_input = np.zeros((self.N_TRAJ * (len(self.times) - self.SEQUENCE_LENGTH - 1), self.SEQUENCE_LENGTH, 3))
         # rnn_output = np.zeros((self.N_TRAJ * (len(self.times) - self.SEQUENCE_LENGTH - 1), 3))
@@ -77,24 +77,22 @@ class CWSimulator():
             + 0.1 / self.n * torch.sin(self.n * self.times)
             + (4 * 1 - 2 * 0.1 / self.n)
         )
+        print(f'x shape: {x.shape}')
 
-        rnn_input = np.zeros((self.N_TRAJ * (len(self.times) - self.SEQUENCE_LENGTH - 1), self.SEQUENCE_LENGTH, 3))
-        rnn_output = np.zeros((self.N_TRAJ * (len(self.times) - self.SEQUENCE_LENGTH - 1), 3))
+        rnn_input = torch.zeros(((len(self.times) - self.SEQUENCE_LENGTH - 1), self.SEQUENCE_LENGTH))
+        rnn_output = torch.zeros((len(self.times) - self.SEQUENCE_LENGTH - 1))
 
-        for j in range(self.N_TRAJ):
-            for k in range(len(self.times) - self.SEQUENCE_LENGTH - 1):
-                rnn_input[j * (len(self.times) - self.SEQUENCE_LENGTH - 1) + k, :, :] = X_t[j, k:k + self.SEQUENCE_LENGTH, :]
-                rnn_output[j * (len(self.times) - self.SEQUENCE_LENGTH - 1) + k, :] = X_t[j, k + self.SEQUENCE_LENGTH, :]
+        for k in range(len(self.times) - self.SEQUENCE_LENGTH - 1):
+            rnn_input[k, :] = x[k:k + self.SEQUENCE_LENGTH]
+            rnn_output[k] = x[k + self.SEQUENCE_LENGTH]
 
-        import pdb; pdb.set_trace()
-        # TRAIN_SIZE = int(0.7 * rnn_input.shape[0])
-        sig = 5 * torch.cos(2*torch.arange(0,11)) + 4 * torch.sin(3.2*torch.arange(0,11))
-        sig2 = 5 * torch.cos(2*torch.arange(1,12)) + 4 * torch.sin(3.2*torch.arange(1,12))
-        sig_out = 5 * torch.cos(torch.tensor([2*11])) + 4 * torch.sin(torch.tensor([3.2*11]))
-        sig_out2 = 5 * torch.cos(torch.tensor([2*12])) + 4 * torch.sin(torch.tensor([3.2*12]))
-        rnn_input = torch.cat([sig[None,:], sig2[None,:]], dim=0).unsqueeze(-1).float()
-        rnn_output = torch.cat([sig_out[None,:], sig_out2[None,:]], dim=0).unsqueeze(-1).float()
-        
-        # X_train, X_val = rnn_input[:TRAIN_SIZE, :, :], rnn_input[TRAIN_SIZE:, :, :]
+        # sig = 5 * torch.cos(2*torch.arange(0,11)) + 4 * torch.sin(3.2*torch.arange(0,11))
+        # sig2 = 5 * torch.cos(2*torch.arange(1,12)) + 4 * torch.sin(3.2*torch.arange(1,12))
+        # sig_out = 5 * torch.cos(torch.tensor([2*11])) + 4 * torch.sin(torch.tensor([3.2*11]))
+        # sig_out2 = 5 * torch.cos(torch.tensor([2*12])) + 4 * torch.sin(torch.tensor([3.2*12]))
+        # rnn_input = torch.cat([sig[None,:], sig2[None,:]], dim=0).unsqueeze(-1).float()
+        # rnn_output = torch.cat([sig_out[None,:], sig_out2[None,:]], dim=0).unsqueeze(-1).float()
+
+
         print(f'rnn_input shape: {rnn_input.shape}, rnn_output shape: {rnn_output.shape}')
-        return rnn_input, rnn_output
+        return rnn_input.unsqueeze(-1).float(), rnn_output.unsqueeze(-1).float()

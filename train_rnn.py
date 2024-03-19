@@ -136,9 +136,9 @@ def main():
     trainer = Trainer()
 
     # [INFO] Creating training data via simulation...
-    simulator = CWSimulator(N_TRAJ=1)
-    X_t = simulator.simulate_trajectories()
-    rnn_input, rnn_output = simulator.create_training_data(X_t=X_t)
+    simulator = CWSimulator()
+    # X_t = simulator.simulate_trajectories()
+    rnn_input, rnn_output = simulator.create_training_data()
 
     print(f'[INFO] Loading training data and creating dataset...')
     training_data = CWTrajDataset(inputs=rnn_input, outputs=rnn_output)
@@ -155,24 +155,27 @@ def main():
 
     # train and validation dataset split and dataloader creation
     print("[INFO] generating the train/validation split...")
+    print(f'Length of training data: {len(training_data)}')
     training_data_size = int(len(training_data) * hp.TRAIN_SPLIT)
     val_data_size = len(training_data) - training_data_size # int(len(training_data) * hp.VAL_SPLIT)
     (training_data, val_data) = random_split(training_data, [training_data_size, val_data_size], generator=torch.Generator().manual_seed(42))
 
     train_dataloader = DataLoader(training_data, batch_size=hp.BATCH_SIZE, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=hp.BATCH_SIZE)
-
-    # batch, truth = next(iter(train_dataloader))    
-    # print(f"Batch shape: {batch.shape}")
-    # fig, ax = plt.subplots(1,1,subplot_kw={'projection': '3d'})
-    # for i in range(1):
-    #     x, y, z = batch[i, :, :].numpy().T
+    print(f'dataloader length: {len(train_dataloader)}')
+    batch, truth = next(iter(train_dataloader))    
+    print(f"Batch shape: {batch.shape}")
+    print(f'Truth shape: {truth.shape}')
+    import pdb; pdb.set_trace()
+    fig, ax = plt.subplots(1,1)
+    for i in range(1):
+        x = batch[i, :, :].squeeze().numpy().T
         
-    #     ax.plot(x, y, z, marker='o', linewidth=1)
-    #     ax.scatter(x[0], y[0], z[0], color='r')
-    #     x_pred, y_pred, z_pred = truth[i, :].numpy().T
-    #     ax.scatter(x_pred, y_pred, z_pred, color='m')
-    # plt.show()
+        ax.plot(x, marker='o', linewidth=1)
+        ax.scatter(0, x[0], color='r')
+        x_pred = truth[i, :].squeeze().numpy()
+        ax.scatter(11, x_pred, color='m')
+    plt.show()
 
     # import pdb; pdb.set_trace()
 
