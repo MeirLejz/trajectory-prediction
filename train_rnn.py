@@ -105,8 +105,8 @@ class Trainer():
         plt.style.use("ggplot")
         plt.figure()
 
-        plt.plot([loss for loss in history["train_loss"] if loss < 300], label="train_loss")
-        plt.plot([loss for loss in history["val_loss"] if loss < 300], label="val_loss")
+        plt.plot([loss for loss in history["train_loss"] if loss < 1], label="train_loss")
+        plt.plot([loss for loss in history["val_loss"] if loss < 1], label="val_loss")
         plt.title("Training Loss")
         plt.xlabel("Epoch #")
         plt.ylabel("Loss")
@@ -119,6 +119,8 @@ class Trainer():
 
 def main():
 
+    N_INPUT_FEATURES = 1 # 1D
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-lr", "--learning_rate", type=float, default=hp.INIT_LR, help="learning rate")
     ap.add_argument("-bs", "--batch_size", type=int, default=hp.BATCH_SIZE, help="batch size")
@@ -126,8 +128,6 @@ def main():
     ap.add_argument("-m", "--model", type=str, required=True, help="path to output trained model")
     ap.add_argument("-p", "--plot", type=str, required=True, help="path to output loss plot")
     args = vars(ap.parse_args())  
-
-    # check path 
     
     # looking for gpu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -135,55 +135,52 @@ def main():
     # initializing trainer object
     trainer = Trainer()
 
-    # [INFO] Creating training data via simulation...
+    # [INFO] Simulating trajectories...
     simulator = CWSimulator()
-    # X_t = simulator.simulate_trajectories()
-    rnn_input, rnn_output = simulator.create_training_data()
+    trajectories = simulator.simulate_trajectories()
+    trajectories = torch.tensor(trajectories).float()
 
-    print(f'[INFO] Loading training data and creating dataset...')
-    training_data = CWTrajDataset(inputs=rnn_input, outputs=rnn_output)
-    
-    # train_dataloader = DataLoader(training_data, batch_size=hp.BATCH_SIZE, shuffle=True)   
-    # # The training data is first normalized so it has unit variance and zero mean
-    # mean, std = trainer.get_mean_std(train_dataloader)
-    # print(f"Mean: {mean}, Std: {std}")
-    # transform = Compose([
-    #     ToTensor(),
-    #     Normalize(mean=mean, std=std)
-    # ])
-    # training_data = datasets.KMNIST(root="data", train=True, download=True, transform=transform)
 
-    # train and validation dataset split and dataloader creation
+    # if 2D, add a third dimension
+    if len(trajectories.shape) == 2:
+        trajectories = trajectories.unsqueeze(2)
+    print(f'trajectories shape: {trajectories.shape}')
+
+    print(f'[INFO] Creating datasets...')
     print("[INFO] generating the train/validation split...")
-    print(f'Length of training data: {len(training_data)}')
-    training_data_size = int(len(training_data) * hp.TRAIN_SPLIT)
-    val_data_size = len(training_data) - training_data_size # int(len(training_data) * hp.VAL_SPLIT)
-    (training_data, val_data) = random_split(training_data, [training_data_size, val_data_size], generator=torch.Generator().manual_seed(42))
+    train_split = int(trajectories.shape[0] * hp.TRAIN_SPLIT)
+    training_data = CWTrajDataset(trajectories=trajectories[:train_split], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=N_INPUT_FEATURES)
+    val_data = CWTrajDataset(trajectories=trajectories[train_split:], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=N_INPUT_FEATURES)
+
+    # print(f'Length of training data: {len(training_data)}')
+    # training_data_size = int(len(training_data) * hp.TRAIN_SPLIT)
+    # val_data_size = len(training_data) - training_data_size # int(len(training_data) * hp.VAL_SPLIT)
+    # (training_data, val_data) = random_split(training_data, [training_data_size, val_data_size], generator=torch.Generator().manual_seed(42))
 
     train_dataloader = DataLoader(training_data, batch_size=hp.BATCH_SIZE, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=hp.BATCH_SIZE)
-    print(f'dataloader length: {len(train_dataloader)}')
-    batch, truth = next(iter(train_dataloader))    
-    print(f"Batch shape: {batch.shape}")
-    print(f'Truth shape: {truth.shape}')
-    import pdb; pdb.set_trace()
-    fig, ax = plt.subplots(1,1)
-    for i in range(1):
-        x = batch[i, :, :].squeeze().numpy().T
-        
-        ax.plot(x, marker='o', linewidth=1)
-        ax.scatter(0, x[0], color='r')
-        x_pred = truth[i, :].squeeze().numpy()
-        ax.scatter(11, x_pred, color='m')
-    plt.show()
+    
+    # print(f'dataloader length: {len(train_dataloader)}')
 
+    # batch, truth = next(iter(train_dataloader)) 
+    # print(f'batch length: {len(batch)}')
+    # fig, ax = plt.subplots(1,1)
+    # for i in range(batch.shape[0]):
+
+    #     x = batch[i, :, :].squeeze().numpy().T
+        
+    #     ax.plot(x, marker='o', linewidth=1)
+    #     ax.scatter(0, x[0], color='r')
+    #     x_pred = truth[i, :].squeeze().numpy()
+    #     ax.scatter(10, x_pred, color='m')
+    # plt.show()
     # import pdb; pdb.set_trace()
 
     # model, loss function and optimization strategy definition
-    model = LSTM(input_size=1, hidden_size=hp.HIDDEN_SIZE, output_size=1, num_layers=3).to(device)
+    model = LSTM(input_size=N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=N_INPUT_FEATURES, num_layers=hp.NUM_LAYERS).to(device)
     loss_fn = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=hp.INIT_LR) # 
-    scheduler = MultiStepLR(optimizer, milestones=[20,50,100], gamma=0.1)
+    # scheduler = MultiStepLR(optimizer, milestones=[200,600, 800], gamma=0.1)
 
     H = {
         "train_loss": [],
@@ -199,8 +196,8 @@ def main():
         print(f"Epoch {t+1}/{args["epochs"]}\n-------------------------------")
         train_loss = trainer.train(train_dataloader, model, loss_fn, optimizer, device)
         val_loss = trainer.validate(val_dataloader, model, loss_fn, device)
-        scheduler.step()
-        print(f'Learning rate: {scheduler.get_last_lr()}')
+        # scheduler.step()
+        # print(f'Learning rate: {scheduler.get_last_lr()}')
 
         H["train_loss"].append(train_loss)
         H["val_loss"].append(val_loss)

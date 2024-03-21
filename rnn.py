@@ -15,11 +15,13 @@ class LSTM(nn.Module):
         #                     torch.zeros(num_layers,1,self.hidden_layer_size))
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x = x[:,:,0:1]
-
-        h0 = torch.zeros(self.num_layers, self.hidden_size)
-        c0 = torch.zeros(self.num_layers, self.hidden_size)
+        
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        # print(f'h0 shape: {h0.shape}, c0 shape: {c0.shape}')
         out, _ = self.lstm(x, (h0, c0))
+        # import pdb; pdb.set_trace()
         out = self.linear(out[:, -1, :])
+        # pdb.set_trace()
         return out
     
