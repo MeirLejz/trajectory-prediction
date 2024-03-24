@@ -47,42 +47,4 @@ class CWSimulator():
 
         X_t = np.asarray([[self.relative_position(X_i=X_i, t=t) for t in self.times] for X_i in X_is])
 
-        # , subplot_kw={'projection': '3d'}
-        # fig, ax = plt.subplots(1,1)
-        # for j in range(N_TRAJ):
-        #     x, y, z = X_t[j,:,:].T
-            # , z, , z[0], ,0
-        #     ax.plot(x, y, linewidth=1)
-        #     ax.scatter(x[0],y[0], color='r')
-        # ax.scatter(0,0, color='k')
-        # plt.show()
-
         return X_t
-
-    # def create_training_data(self, X_t: np.ndarray=0) -> tuple[np.ndarray, np.ndarray]:
-
-        # rnn_input = np.zeros((self.N_TRAJ * (len(self.times) - self.SEQUENCE_LENGTH - 1), self.SEQUENCE_LENGTH, 3))
-        # rnn_output = np.zeros((self.N_TRAJ * (len(self.times) - self.SEQUENCE_LENGTH - 1), 3))
-
-        # for j in range(self.N_TRAJ):
-        #     for k in range(len(self.times) - self.SEQUENCE_LENGTH - 1):
-        #         rnn_input[j * (len(self.times) - self.SEQUENCE_LENGTH - 1) + k, :, :] = X_t[j, k:k + self.SEQUENCE_LENGTH, :]
-        #         rnn_output[j * (len(self.times) - self.SEQUENCE_LENGTH - 1) + k, :] = X_t[j, k + self.SEQUENCE_LENGTH, :]
-
-        # x = (
-        #     (2 * 0.1 / self.n - 3 * 1) * torch.cos(self.n * self.times)
-        #     + 0.1 / self.n * torch.sin(self.n * self.times)
-        #     + (4 * 1 - 2 * 0.1 / self.n)
-        # )
-
-        # print(f'x shape: {x.shape}')
-
-        # rnn_input = torch.zeros(((len(self.times) - self.SEQUENCE_LENGTH - 1), self.SEQUENCE_LENGTH))
-        # rnn_output = torch.zeros((len(self.times) - self.SEQUENCE_LENGTH - 1))
-
-        # for k in range(len(self.times) - self.SEQUENCE_LENGTH - 1):
-        #     rnn_input[k, :] = x[k:k + self.SEQUENCE_LENGTH]
-        #     rnn_output[k] = x[k + self.SEQUENCE_LENGTH]
-
-        # print(f'rnn_input shape: {rnn_input.shape}, rnn_output shape: {rnn_output.shape}')
-        # return rnn_input.unsqueeze(-1).float(), rnn_output.unsqueeze(-1).float()

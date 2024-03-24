@@ -18,12 +18,16 @@ from simulator import CWSimulator
 from hyperparams import Hyperparameters as hp
 from rnn import LSTM
 
+import pdb
 # test_data = datasets.KMNIST(
 #     root="data",
 #     train=False,
 #     download=True,
 #     transform=transform,
 # )
+
+
+
 
 class Trainer():
 
@@ -59,7 +63,6 @@ class Trainer():
 
             pred = model(X)
             loss = loss_fn(pred, y)
-
 
             optimizer.zero_grad()
             loss.backward()
@@ -119,8 +122,7 @@ class Trainer():
 
 def main():
 
-    N_INPUT_FEATURES = 1 # 1D
-
+      
     ap = argparse.ArgumentParser()
     ap.add_argument("-lr", "--learning_rate", type=float, default=hp.INIT_LR, help="learning rate")
     ap.add_argument("-bs", "--batch_size", type=int, default=hp.BATCH_SIZE, help="batch size")
@@ -149,8 +151,8 @@ def main():
     print(f'[INFO] Creating datasets...')
     print("[INFO] generating the train/validation split...")
     train_split = int(trajectories.shape[0] * hp.TRAIN_SPLIT)
-    training_data = CWTrajDataset(trajectories=trajectories[:train_split], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=N_INPUT_FEATURES)
-    val_data = CWTrajDataset(trajectories=trajectories[train_split:], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=N_INPUT_FEATURES)
+    training_data = CWTrajDataset(trajectories=trajectories[:train_split], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
+    val_data = CWTrajDataset(trajectories=trajectories[train_split:], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
 
     # print(f'Length of training data: {len(training_data)}')
     # training_data_size = int(len(training_data) * hp.TRAIN_SPLIT)
@@ -163,6 +165,7 @@ def main():
     # print(f'dataloader length: {len(train_dataloader)}')
 
     # batch, truth = next(iter(train_dataloader)) 
+    # import pdb; pdb.set_trace()
     # print(f'batch length: {len(batch)}')
     # fig, ax = plt.subplots(1,1)
     # for i in range(batch.shape[0]):
@@ -177,10 +180,10 @@ def main():
     # import pdb; pdb.set_trace()
 
     # model, loss function and optimization strategy definition
-    model = LSTM(input_size=N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=N_INPUT_FEATURES, num_layers=hp.NUM_LAYERS).to(device)
+    model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=hp.N_FUTURE_STEPS, num_layers=hp.NUM_LAYERS).to(device)
     loss_fn = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=hp.INIT_LR) # 
-    # scheduler = MultiStepLR(optimizer, milestones=[200,600, 800], gamma=0.1)
+    scheduler = MultiStepLR(optimizer, milestones=hp.MILESTONES, gamma=0.1)
 
     H = {
         "train_loss": [],
@@ -196,7 +199,7 @@ def main():
         print(f"Epoch {t+1}/{args["epochs"]}\n-------------------------------")
         train_loss = trainer.train(train_dataloader, model, loss_fn, optimizer, device)
         val_loss = trainer.validate(val_dataloader, model, loss_fn, device)
-        # scheduler.step()
+        scheduler.step()
         # print(f'Learning rate: {scheduler.get_last_lr()}')
 
         H["train_loss"].append(train_loss)

@@ -21,7 +21,7 @@ class LSTM(nn.Module):
         # print(f'h0 shape: {h0.shape}, c0 shape: {c0.shape}')
         out, _ = self.lstm(x, (h0, c0))
         # import pdb; pdb.set_trace()
-        out = self.linear(out[:, -1, :])
+        out = self.linear(out[:, -1, :]).unsqueeze(2)
         # pdb.set_trace()
         return out
     

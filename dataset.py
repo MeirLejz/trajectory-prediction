@@ -4,21 +4,22 @@ from torch.utils.data import Dataset
 
 
 class CWTrajDataset(Dataset):
-    def __init__(self, trajectories: torch.Tensor, sequence_len: int, transform=None, target_transform=None, n_input_features: int=1):
+    def __init__(self, trajectories: torch.Tensor, sequence_len: int, transform=None, target_transform=None, n_input_features: int=1, future_len: int=5):
         
         self.trajectories = trajectories
         self.n_traj = trajectories.shape[0]
         self.traj_len = trajectories.shape[1]
         self.sequence_len = sequence_len
         self.n_input_features = n_input_features
+        self.future_len = future_len    
 
         self.inputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.sequence_len, n_input_features))
-        self.outputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), n_input_features))
+        self.outputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.future_len, n_input_features))
 
         for j in range(self.n_traj):
-            for k in range(self.traj_len - self.sequence_len - 1):
-                self.inputs[j * (self.traj_len - self.sequence_len - 1) + k, :, :] = self.trajectories[j, k:k + self.sequence_len, :]
-                self.outputs[j * (self.traj_len - self.sequence_len - 1) + k, :] = self.trajectories[j, k + self.sequence_len, :]
+            for k in range(self.traj_len - self.sequence_len - self.future_len - 1):
+                self.inputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = self.trajectories[j, k:(k + self.sequence_len), :]
+                self.outputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = self.trajectories[j, (k + self.sequence_len): (k + self.sequence_len + self.future_len), :]
                 
         self.transform = transform
         self.target_transform = target_transform
@@ -34,7 +35,7 @@ class CWTrajDataset(Dataset):
         if self.transform:
             input = self.transform(input)
 
-        output = self.outputs[idx,:]
+        output = self.outputs[idx,:,:]
         if self.target_transform:
             output = self.target_transform(output)
         return input, output

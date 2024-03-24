@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 import pdb
+from hyperparams import Hyperparameters as hp
 
 
 def load_model(path: str = './output/model.pth') -> torch.nn.Module:
@@ -15,80 +16,51 @@ def main():
     model = load_model(path='./output/model.pth')
     model.eval()
 
-    # simulator = CWSimulator(N_TRAJ=1)
+    simulator = CWSimulator(N_TRAJ=1)
     # Create test data from simulator.py
-    # trajectories = simulator.simulate_trajectories()
+    trajectories = simulator.simulate_trajectories()
 
-    dt = 10 # seconds. Time step
-    T = 60*60 # seconds. Period of the orbit
-    n = 2*np.pi/T # rad/s. Orbital rate
-    N_TRAJ = 1 # Number of trajectories
-    SEQUENCE_LENGTH = 10 # Number of time steps to use for prediction
-    max_t = T # seconds. Maximum time to simulate
-    times = torch.arange(0, max_t+dt, dt)
-    x = (
-        (2 * 0.1 / n - 3 * 1) * torch.cos(n * times)
-        + 0.1 / n * torch.sin(n * times)
-        + (4 * 1 - 2 * 0.1 / n)
-    )   
+    trajectories = torch.tensor(trajectories).float()
+
+    # if 2D, add a third dimension
+    if len(trajectories.shape) == 2:
+        trajectories = trajectories.unsqueeze(2)
+    print(f'trajectories shape: {trajectories.shape}')
+
+    seq_length = simulator.SEQUENCE_LENGTH
 
 
-
-    seq_length = SEQUENCE_LENGTH
-    ynn = np.zeros((len(times)))
-    ynn[0:seq_length] = x[0:seq_length]
-    print(f'lenght of times: {len(times)}')
-    with torch.no_grad():
-        for k in range(seq_length, len(times)):
-            rnn_input = torch.tensor(ynn[k - seq_length:k]).float().unsqueeze(1).unsqueeze(0)
-            # import pdb; pdb.set_trace()
-            # print(f'rnn_input shape: {rnn_input.shape}')
-            # pdb.set_trace()
-
-            output = model(rnn_input).squeeze().numpy()
-            # print(f'output shape: {np.shape(output)}')
-            ynn[k] = output
-
+    ynn = np.zeros((simulator.N_TRAJ, len(simulator.times), hp.N_INPUT_FEATURES))
+    ynn[:, 0:seq_length, :] = trajectories[:, 0:seq_length, :]
+    print(f'lenght of times: {len(simulator.times)}')
     
-    fig, ax = plt.subplots(1,1,subplot_kw={'projection': '3d'})
+    with torch.no_grad():
+        for j in range(simulator.N_TRAJ):
+            for k in range(seq_length, len(simulator.times) - hp.N_FUTURE_STEPS, hp.N_FUTURE_STEPS):
+                # rnn_input = torch.tensor(ynn[j, k - seq_length:k, :]).float().unsqueeze(0)
+                rnn_input = trajectories[j, k - seq_length:k, :].unsqueeze(0)
 
-    ax.plot(times, x, linewidth=1)
-    ax.scatter(0, x[0], color='r')
-    ax.plot(times, ynn, linewidth=1, linestyle='--')
-    ax.scatter(seq_length, ynn[seq_length], color='m')
+                output = model(rnn_input).numpy()
+                # print(f'output shape: {np.shape(output)}')
+                ynn[j, k:k+hp.N_FUTURE_STEPS, :] = output
+
+
+    _, ax = plt.subplots(2,1)
+    for j in range(simulator.N_TRAJ):
+
+        x = trajectories[j,:,:].squeeze().numpy()
+        ax[0].plot(simulator.times, x, linewidth=1,marker='o')
+        # ax.scatter(x[0], color='r')
+        x_ = ynn[j,:,:].squeeze()
+        ax[0].plot(simulator.times, x_, linewidth=1, linestyle='--', marker='x')
+        # ax.scatter(x_[seq_length], color='m')
+
+    ax[0].scatter(0,0, color='k')
+
+    ax[1].plot(simulator.times, x - x_, linewidth=1, marker='o', markersize=0.1)
 
 
     plt.show()
-
-
-    # ynn = np.zeros((simulator.N_TRAJ, len(simulator.times), 3))
-    # ynn[:, 0:seq_length, :] = trajectories[:, 0:seq_length, :]
-    # print(f'lenght of times: {len(simulator.times)}')
-    # with torch.no_grad():
-    #     for j in range(simulator.N_TRAJ):
-    #         for k in range(seq_length, len(simulator.times)):
-    #             rnn_input = torch.tensor(ynn[j, k - seq_length:k, :]).float().unsqueeze(0)
-    #             # import pdb; pdb.set_trace()
-
-    #             # print(f'rnn_input shape: {rnn_input.shape}')
-    #             output = model(rnn_input).squeeze().numpy()
-    #             # print(f'output shape: {np.shape(output)}')
-    #             ynn[j, k, :] = output
-
-    
-    # fig, ax = plt.subplots(1,1,subplot_kw={'projection': '3d'})
-    # for j in range(simulator.N_TRAJ):
-
-    #     x, y, z = trajectories[j,:,:].T
-    #     ax.plot(x, y, z, linewidth=1)
-    #     ax.scatter(x[0], y[0], z[0], color='r')
-    #     x_, y_, z_ = ynn[j,:,:].T
-    #     ax.plot(x_, y_, z_, linewidth=1, linestyle='--')
-    #     ax.scatter(x_[seq_length], y_[seq_length], z_[seq_length], color='m')
-
-    # ax.scatter(0,0, color='k')
-
-    # plt.show()
     pdb.set_trace()
                 
 if __name__ == '__main__':
