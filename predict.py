@@ -36,7 +36,7 @@ def main():
     
     with torch.no_grad():
         for j in range(simulator.N_TRAJ):
-            for k in range(seq_length, len(simulator.times) - hp.N_FUTURE_STEPS, hp.N_FUTURE_STEPS):
+            for k in range(1): # range(seq_length, len(simulator.times) - hp.N_FUTURE_STEPS, hp.N_FUTURE_STEPS):
                 # rnn_input = torch.tensor(ynn[j, k - seq_length:k, :]).float().unsqueeze(0)
                 rnn_input = trajectories[j, k - seq_length:k, :].unsqueeze(0)
 

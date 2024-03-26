@@ -1,14 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from hyperparams import Hyperparameters as hp
 import torch
 
 # simulation parameters
-dt = 1 # seconds. Time step
+dt = 20 # seconds. Time step
 T = 60*60 # seconds. Period of the orbit
 n = 2*np.pi/T # rad/s. Orbital rate
-N_TRAJ = 10 # Number of trajectories
-SEQUENCE_LENGTH = 40 # Number of time steps to use for prediction
-max_t = T # seconds. Maximum time to simulate
+N_TRAJ = 50 # Number of trajectories
+SEQUENCE_LENGTH = hp.SEQUENCE_LENGTH # Number of time steps to use for prediction
+max_t = T*3 # seconds. Maximum time to simulate
 
 class CWSimulator():
     def __init__(self, dt: float=dt, max_t: float=max_t, n: float=n, N_TRAJ: int=N_TRAJ, SEQUENCE_LENGTH: int=SEQUENCE_LENGTH):
@@ -39,7 +40,7 @@ class CWSimulator():
         return x # [x,y,z]
 
     def simulate_trajectories(self) -> np.ndarray:
-        pos_is = 5 + 1 * np.random.random((self.N_TRAJ,3))
+        pos_is = -0.5 + 1 * np.random.random((self.N_TRAJ,3))
         vel_is = 0.1 * np.zeros((self.N_TRAJ,3))  
         
         # Concatenate pos_i and vel_i along the 2nd dimension
