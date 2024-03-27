@@ -36,8 +36,10 @@ class CWSimulator():
             + (y_0 + 2 * vx_0 / self.n)
         )
         z = z_0 * np.cos(self.n * t) + vz_0 / self.n * np.sin(self.n * t)
-
-        return x # [x,y,z]
+        if hp.N_INPUT_FEATURES == 3:
+            return [x,y,z]
+        elif hp.N_INPUT_FEATURES == 1:
+            return [x]
 
     def simulate_trajectories(self) -> np.ndarray:
         pos_is = -0.5 + 1 * np.random.random((self.N_TRAJ,3))

@@ -1,33 +1,19 @@
-import matplotlib
 # matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import argparse, time, numpy as np
 
-from torch.utils.data import random_split, DataLoader
-from torchvision.transforms import ToTensor, Compose, Normalize
-from torchvision import datasets
+from torch.utils.data import DataLoader
 from torch.optim import Optimizer, Adam
 import torch
 from torch import nn
 from torch.optim.lr_scheduler import MultiStepLR
 
-
 from dataset import CWTrajDataset
 from simulator import CWSimulator
 from hyperparams import Hyperparameters as hp
-from rnn import LSTM
-
-import pdb
-# test_data = datasets.KMNIST(
-#     root="data",
-#     train=False,
-#     download=True,
-#     transform=transform,
-# )
-
-
-
+from models.rnn import LSTM
+from models.encod_decod_lstm import LSTM_seq2seq
 
 class Trainer():
 
@@ -180,16 +166,15 @@ def main():
     # import pdb; pdb.set_trace()
 
     # model, loss function and optimization strategy definition
-    model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=hp.N_FUTURE_STEPS, num_layers=hp.NUM_LAYERS).to(device)
+    model = LSTM_seq2seq(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, num_layers=hp.NUM_LAYERS, target_len=hp.N_FUTURE_STEPS).to(device)
+    # model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=hp.N_FUTURE_STEPS, num_layers=hp.NUM_LAYERS).to(device)
     loss_fn = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=hp.INIT_LR) # 
     scheduler = MultiStepLR(optimizer, milestones=hp.MILESTONES, gamma=0.1)
 
     H = {
         "train_loss": [],
-        "train_acc": [],
         "val_loss": [],
-        "val_acc": []
     }
 
     start = time.time()

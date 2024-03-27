@@ -36,29 +36,42 @@ def main():
     
     with torch.no_grad():
         for j in range(simulator.N_TRAJ):
-            for k in range(1): # range(seq_length, len(simulator.times) - hp.N_FUTURE_STEPS, hp.N_FUTURE_STEPS):
+            for k in range(seq_length, len(simulator.times) - hp.N_FUTURE_STEPS, hp.N_FUTURE_STEPS):
                 # rnn_input = torch.tensor(ynn[j, k - seq_length:k, :]).float().unsqueeze(0)
+
                 rnn_input = trajectories[j, k - seq_length:k, :].unsqueeze(0)
 
                 output = model(rnn_input).numpy()
                 # print(f'output shape: {np.shape(output)}')
                 ynn[j, k:k+hp.N_FUTURE_STEPS, :] = output
 
-
-    _, ax = plt.subplots(2,1)
+    ax = plt.figure().add_subplot(projection=None if hp.N_INPUT_FEATURES == 1 else '3d')
     for j in range(simulator.N_TRAJ):
 
-        x = trajectories[j,:,:].squeeze().numpy()
-        ax[0].plot(simulator.times, x, linewidth=1,marker='o')
-        # ax.scatter(x[0], color='r')
-        x_ = ynn[j,:,:].squeeze()
-        ax[0].plot(simulator.times, x_, linewidth=1, linestyle='--', marker='x')
-        # ax.scatter(x_[seq_length], color='m')
+        if hp.N_INPUT_FEATURES == 1:
+            
+            x = trajectories[j,:,:].squeeze().numpy()
+            ax.plot(simulator.times, x, linewidth=1,marker='o')
+            # ax.scatter(x[0], color='r')
+            x_ = ynn[j,:,:].squeeze()
+            ax.plot(simulator.times, x_, linewidth=1, linestyle='--', marker='x')
+            ax.plot(x_[seq_length], color='m')
+            # ax[0].scatter(0,0, color='k')
 
-    ax[0].scatter(0,0, color='k')
+        elif hp.N_INPUT_FEATURES == 3:
+            x, y, z = trajectories[j,:,:].squeeze().T.numpy()
 
-    ax[1].plot(simulator.times, x - x_, linewidth=1, marker='o', markersize=0.1)
+            ax.plot(x, y, z, linewidth=1,marker='o')
+            ax.scatter(x[0], y[0], z[0], color='r')
+            x_, y_, z_ = ynn[j,:,:].squeeze().T
+            ax.plot(x_, y_, z_, linewidth=1, linestyle='--', marker='x')
+            ax.scatter(x_[seq_length], y_[seq_length], z_[seq_length], color='m')
 
+            ax.scatter(0,0,0, color='k')
+
+    # ax[1].plot(simulator.times, x - x_, linewidth=1, marker='o', markersize=0.1)
+    # ax[1].plot(simulator.times, y - y_, linewidth=1, marker='o', markersize=0.1)
+    # ax[1].plot(simulator.times, z - z_, linewidth=1, marker='o', markersize=0.1)
 
     plt.show()
     pdb.set_trace()
