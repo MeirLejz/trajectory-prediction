@@ -52,26 +52,29 @@ def main():
             
             x = trajectories[j,:,:].squeeze().numpy()
             ax.plot(simulator.times, x, linewidth=1,marker='o')
-            # ax.scatter(x[0], color='r')
+            ax.plot(x[0], color='r')
             x_ = ynn[j,:,:].squeeze()
             ax.plot(simulator.times, x_, linewidth=1, linestyle='--', marker='x')
             ax.plot(x_[seq_length], color='m')
-            # ax[0].scatter(0,0, color='k')
+            ax.plot(0,0, color='k')
+
+        elif hp.N_INPUT_FEATURES == 2:
+            x, y = trajectories[j,:,:].squeeze().T.numpy()
+            ax.plot(x, y, linewidth=1,marker='o')
+            ax.scatter(x[0], y[0], color='r')
+            x_, y_ = ynn[j,:,:].squeeze().T
+            ax.plot(x_, y_, linewidth=1, linestyle='--', marker='x')
+            ax.scatter(x_[seq_length], y_[seq_length], color='m')
+            ax.scatter(0,0, color='k')
 
         elif hp.N_INPUT_FEATURES == 3:
             x, y, z = trajectories[j,:,:].squeeze().T.numpy()
-
             ax.plot(x, y, z, linewidth=1,marker='o')
             ax.scatter(x[0], y[0], z[0], color='r')
             x_, y_, z_ = ynn[j,:,:].squeeze().T
             ax.plot(x_, y_, z_, linewidth=1, linestyle='--', marker='x')
             ax.scatter(x_[seq_length], y_[seq_length], z_[seq_length], color='m')
-
             ax.scatter(0,0,0, color='k')
-
-    # ax[1].plot(simulator.times, x - x_, linewidth=1, marker='o', markersize=0.1)
-    # ax[1].plot(simulator.times, y - y_, linewidth=1, marker='o', markersize=0.1)
-    # ax[1].plot(simulator.times, z - z_, linewidth=1, marker='o', markersize=0.1)
 
     plt.show()
     pdb.set_trace()

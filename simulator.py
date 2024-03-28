@@ -38,6 +38,8 @@ class CWSimulator():
         z = z_0 * np.cos(self.n * t) + vz_0 / self.n * np.sin(self.n * t)
         if hp.N_INPUT_FEATURES == 3:
             return [x,y,z]
+        elif hp.N_INPUT_FEATURES == 2:
+            return [x,y]
         elif hp.N_INPUT_FEATURES == 1:
             return [x]
 

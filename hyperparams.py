@@ -13,6 +13,6 @@ class Hyperparameters:
     MILESTONES = [50]
     NUM_LAYERS: int = 2
 
-    N_INPUT_FEATURES: int = 1 # 3D input
+    N_INPUT_FEATURES: int = 2 # 3D input
     N_FUTURE_STEPS: int = 10
     SEQUENCE_LENGTH: int = 50
