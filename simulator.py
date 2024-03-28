@@ -7,7 +7,7 @@ import torch
 dt = 20 # seconds. Time step
 T = 60*60 # seconds. Period of the orbit
 n = 2*np.pi/T # rad/s. Orbital rate
-N_TRAJ = 150 # Number of trajectories
+N_TRAJ = 200 # Number of trajectories
 SEQUENCE_LENGTH = hp.SEQUENCE_LENGTH # Number of time steps to use for prediction
 max_t = T # seconds. Maximum time to simulate
 
