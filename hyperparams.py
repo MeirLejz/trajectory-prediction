@@ -20,11 +20,11 @@ class Hyperparameters:
     N_FUTURE_STEPS: int = 10
     SEQUENCE_LENGTH: int = 50
     TEACHER_FORCING: bool = True
-    TEACHER_FORCING_RATIO: float = 0.7
+    TEACHER_FORCING_RATIO: float = 0.4
 
     # simulator parameters
     dt = 20 # seconds. Time step
     T = 60*60 # seconds. Period of the orbit
     n = 2*np.pi/T # rad/s. Orbital rate
-    N_TRAJ = 200 # Number of trajectories
+    N_TRAJ = 10 # Number of trajectories
     max_t = T # seconds. Maximum time to simulate

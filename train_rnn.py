@@ -120,13 +120,14 @@ def main():
     
     # looking for gpu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f'[INFO] Using device: {device}')
 
     # initializing trainer object
     trainer = Trainer()
 
     # [INFO] Simulating trajectories...
     simulator = CWSimulator(dt=hp.dt, max_t=hp.max_t, n=hp.n, N_TRAJ=hp.N_TRAJ, SEQUENCE_LENGTH=hp.SEQUENCE_LENGTH)
-
+    print(f'[INFO] Simulating {hp.N_TRAJ} trajectories...')
     trajectories = simulator.simulate_trajectories()
     trajectories = torch.tensor(trajectories).float()
 
@@ -141,6 +142,9 @@ def main():
     train_split = int(trajectories.shape[0] * hp.TRAIN_SPLIT)
     training_data = CWTrajDataset(trajectories=trajectories[:train_split], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
     val_data = CWTrajDataset(trajectories=trajectories[train_split:], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
+
+    print(f'[INFO] Training dataset size: {len(training_data)}')
+    print(f'[INFO] Validation dataset size: {len(val_data)}')
 
     train_dataloader = DataLoader(training_data, batch_size=hp.BATCH_SIZE, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=hp.BATCH_SIZE)
