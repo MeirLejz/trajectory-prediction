@@ -47,7 +47,7 @@ class Trainer():
         for batch, (X, y) in enumerate(dataloader):
             X, y = X.to(device), y.to(device)
 
-            pred = model(X)
+            pred = model(X, y)
             loss = loss_fn(pred, y)
 
             optimizer.zero_grad()
@@ -78,7 +78,7 @@ class Trainer():
             for (X, y) in dataloader:
 
                 X, y = X.to(device), y.to(device) # send input to device
-                pred = model(X) # forward pass
+                pred = model(X, y) # forward pass
 
                 loss = loss_fn(pred, y) # compute loss
 
@@ -94,12 +94,13 @@ class Trainer():
         plt.style.use("ggplot")
         plt.figure()
 
-        plt.plot([loss for loss in history["train_loss"] if loss < 1], label="train_loss")
-        plt.plot([loss for loss in history["val_loss"] if loss < 1], label="val_loss")
+        plt.plot([loss for loss in history["train_loss"]], label="train_loss")
+        plt.plot([loss for loss in history["val_loss"]], label="val_loss")
         plt.title("Training Loss")
         plt.xlabel("Epoch #")
         plt.ylabel("Loss")
         plt.legend()
+        plt.show()
         plt.savefig(path)
 
     @staticmethod
@@ -124,7 +125,8 @@ def main():
     trainer = Trainer()
 
     # [INFO] Simulating trajectories...
-    simulator = CWSimulator()
+    simulator = CWSimulator(dt=hp.dt, max_t=hp.max_t, n=hp.n, N_TRAJ=hp.N_TRAJ, SEQUENCE_LENGTH=hp.SEQUENCE_LENGTH)
+
     trajectories = simulator.simulate_trajectories()
     trajectories = torch.tensor(trajectories).float()
 
@@ -140,34 +142,13 @@ def main():
     training_data = CWTrajDataset(trajectories=trajectories[:train_split], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
     val_data = CWTrajDataset(trajectories=trajectories[train_split:], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
 
-    # print(f'Length of training data: {len(training_data)}')
-    # training_data_size = int(len(training_data) * hp.TRAIN_SPLIT)
-    # val_data_size = len(training_data) - training_data_size # int(len(training_data) * hp.VAL_SPLIT)
-    # (training_data, val_data) = random_split(training_data, [training_data_size, val_data_size], generator=torch.Generator().manual_seed(42))
-
     train_dataloader = DataLoader(training_data, batch_size=hp.BATCH_SIZE, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=hp.BATCH_SIZE)
-    
-    # print(f'dataloader length: {len(train_dataloader)}')
-
-    # batch, truth = next(iter(train_dataloader)) 
-    # import pdb; pdb.set_trace()
-    # print(f'batch length: {len(batch)}')
-    # fig, ax = plt.subplots(1,1)
-    # for i in range(batch.shape[0]):
-
-    #     x = batch[i, :, :].squeeze().numpy().T
-        
-    #     ax.plot(x, marker='o', linewidth=1)
-    #     ax.scatter(0, x[0], color='r')
-    #     x_pred = truth[i, :].squeeze().numpy()
-    #     ax.scatter(10, x_pred, color='m')
-    # plt.show()
-    # import pdb; pdb.set_trace()
 
     # model, loss function and optimization strategy definition
     model = LSTM_seq2seq(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, num_layers=hp.NUM_LAYERS, target_len=hp.N_FUTURE_STEPS).to(device)
     # model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=hp.N_FUTURE_STEPS, num_layers=hp.NUM_LAYERS).to(device)
+    
     loss_fn = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=hp.INIT_LR) # 
     scheduler = MultiStepLR(optimizer, milestones=hp.MILESTONES, gamma=0.1)

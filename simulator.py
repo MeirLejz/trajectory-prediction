@@ -3,16 +3,10 @@ import matplotlib.pyplot as plt
 from hyperparams import Hyperparameters as hp
 import torch
 
-# simulation parameters
-dt = 20 # seconds. Time step
-T = 60*60 # seconds. Period of the orbit
-n = 2*np.pi/T # rad/s. Orbital rate
-N_TRAJ = 200 # Number of trajectories
-SEQUENCE_LENGTH = hp.SEQUENCE_LENGTH # Number of time steps to use for prediction
-max_t = T # seconds. Maximum time to simulate
+
 
 class CWSimulator():
-    def __init__(self, dt: float=dt, max_t: float=max_t, n: float=n, N_TRAJ: int=N_TRAJ, SEQUENCE_LENGTH: int=SEQUENCE_LENGTH):
+    def __init__(self, dt: float, max_t: float, n: float, N_TRAJ: int, SEQUENCE_LENGTH: int):
         self.dt = dt
         self.max_t = max_t
         self.n = n
