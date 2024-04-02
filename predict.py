@@ -16,7 +16,7 @@ def main():
     model = load_model(path='./output/model.pth')
     model.eval()
 
-    simulator = CWSimulator(N_TRAJ=1)
+    simulator = CWSimulator(dt=hp.dt, max_t=hp.max_t, n=hp.n, N_TRAJ=1, SEQUENCE_LENGTH=hp.SEQUENCE_LENGTH)
     # Create test data from simulator.py
     trajectories = simulator.simulate_trajectories()
 

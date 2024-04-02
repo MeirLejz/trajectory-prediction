@@ -6,16 +6,16 @@ class Hyperparameters:
     # training flow hyperparameters
     INIT_LR: float = 1e-2
     BATCH_SIZE: int = 32
-    EPOCHS: int = 100
-    MILESTONES = [10,50]
+    EPOCHS: int = 200
+    MILESTONES = [10,25,100]
 
     # datasets hyperparameters
     TRAIN_SPLIT: float = 0.75
     VAL_SPLIT: float = 1 - TRAIN_SPLIT
     
     # model hyperparameters
-    HIDDEN_SIZE: int = 64
-    NUM_LAYERS: int = 2
+    HIDDEN_SIZE: int = 128
+    NUM_LAYERS: int = 3
     N_INPUT_FEATURES: int = 2 # 3D input
     N_FUTURE_STEPS: int = 10
     SEQUENCE_LENGTH: int = 50
@@ -26,5 +26,5 @@ class Hyperparameters:
     dt = 20 # seconds. Time step
     T = 60*60 # seconds. Period of the orbit
     n = 2*np.pi/T # rad/s. Orbital rate
-    N_TRAJ = 400 # Number of trajectories
+    N_TRAJ = 300 # Number of trajectories
     max_t = T # seconds. Maximum time to simulate
