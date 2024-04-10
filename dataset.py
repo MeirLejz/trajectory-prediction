@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 class CWTrajDataset(Dataset):
     def __init__(self, trajectories: torch.Tensor, sequence_len: int, transform=None, target_transform=None, n_input_features: int=1, future_len: int=5):
         
-        self.trajectories = trajectories
+        # self.trajectories = trajectories
         self.n_traj = trajectories.shape[0]
         self.traj_len = trajectories.shape[1]
         self.sequence_len = sequence_len
@@ -15,6 +15,11 @@ class CWTrajDataset(Dataset):
 
         self.inputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.sequence_len, n_input_features))
         self.outputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.future_len, n_input_features))
+
+        maxes, _ = torch.max(abs(trajectories), axis=1)
+        self.bounds, _ = torch.max(maxes, axis=0)
+
+        self.trajectories = trajectories / self.bounds
 
         for j in range(self.n_traj):
             for k in range(self.traj_len - self.sequence_len - self.future_len - 1):

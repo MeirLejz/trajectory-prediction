@@ -6,6 +6,8 @@ class LSTM(nn.Module):
         super(LSTM, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
+        self.input_size = input_size
+        self.output_size = output_size
         self.lstm = nn.LSTM(input_size=input_size, 
                             hidden_size=hidden_size, 
                             num_layers=num_layers, 

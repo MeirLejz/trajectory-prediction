@@ -12,6 +12,10 @@ def load_model(path: str = './output/model.pth') -> torch.nn.Module:
 
 def main():
 
+    # looking for gpu
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f'[INFO] Using device: {device}')
+
     # Load the model
     model = load_model(path='./output/model.pth')
     model.eval()
@@ -29,7 +33,6 @@ def main():
 
     seq_length = simulator.SEQUENCE_LENGTH
 
-
     ynn = np.zeros((simulator.N_TRAJ, len(simulator.times), hp.N_INPUT_FEATURES))
     ynn[:, 0:seq_length, :] = trajectories[:, 0:seq_length, :]
     print(f'lenght of times: {len(simulator.times)}')
@@ -40,10 +43,11 @@ def main():
                 # rnn_input = torch.tensor(ynn[j, k - seq_length:k, :]).float().unsqueeze(0)
 
                 rnn_input = trajectories[j, k - seq_length:k, :].unsqueeze(0)
-
-                output = model(rnn_input).numpy()
-                # print(f'output shape: {np.shape(output)}')
-                ynn[j, k:k+hp.N_FUTURE_STEPS, :] = output
+                bounds, _ = torch.max(abs(rnn_input), axis=1)
+                rnn_input = rnn_input / bounds
+                import pdb; pdb.set_trace()
+                output = model.predict(rnn_input.to(device))
+                ynn[j, k:k+hp.N_FUTURE_STEPS, :] = (output * bounds).numpy() #  
 
     ax = plt.figure().add_subplot(projection=None if hp.N_INPUT_FEATURES == 1 else '3d')
     for j in range(simulator.N_TRAJ):
@@ -59,6 +63,7 @@ def main():
             ax.plot(0,0, color='k')
 
         elif hp.N_INPUT_FEATURES == 2:
+            trajectories /= bounds
             x, y = trajectories[j,:,:].squeeze().T.numpy()
             ax.plot(x, y, linewidth=1,marker='o')
             ax.scatter(x[0], y[0], color='r')
@@ -81,3 +86,5 @@ def main():
                 
 if __name__ == '__main__':
     main()
+    # adapt forward function of LSTM seq to seq
+    # scale down & back trajectories

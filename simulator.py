@@ -4,7 +4,6 @@ from hyperparams import Hyperparameters as hp
 import torch
 
 
-
 class CWSimulator():
     def __init__(self, dt: float, max_t: float, n: float, N_TRAJ: int, SEQUENCE_LENGTH: int):
         self.dt = dt
@@ -38,7 +37,7 @@ class CWSimulator():
             return [x]
 
     def simulate_trajectories(self) -> np.ndarray:
-        pos_is = -25 + 5 * np.random.random((self.N_TRAJ,3))
+        pos_is = -25 + 10 * np.random.random((self.N_TRAJ,3))
         vel_is = 0.1 * np.zeros((self.N_TRAJ,3))  
         
         # Concatenate pos_i and vel_i along the 2nd dimension

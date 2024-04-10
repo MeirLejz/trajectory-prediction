@@ -20,8 +20,8 @@ class LSTM_Encoder(nn.Module):
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
 
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size, device=x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size, device=x.device)
 
         out, (hidden, cell) = self.lstm(x, (h0, c0))
 
@@ -91,5 +91,21 @@ class LSTM_seq2seq(nn.Module):
                 decoder_out, decoder_hidden = self.decoder(decoder_input, decoder_hidden)
                 outputs[:, t, :] = decoder_out
                 decoder_input = decoder_out    
+
+        return outputs
+
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+
+        encoder_output, encoder_hidden = self.encoder(x)
+
+        outputs = torch.zeros(x.shape[0], self.target_len, x.shape[2])
+
+        decoder_input = x[:,-1,:]
+        decoder_hidden = encoder_hidden
+
+        for t in range(self.target_len):
+            decoder_output, decoder_hidden = self.decoder(decoder_input, decoder_hidden)
+            decoder_input = decoder_output
+            outputs[:,t,:] = decoder_output
 
         return outputs
