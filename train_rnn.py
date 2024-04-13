@@ -63,7 +63,7 @@ def main():
     ap.add_argument("-lr", "--learning_rate", type=float, default=hp.INIT_LR, help="learning rate")
     ap.add_argument("-bs", "--batch_size", type=int, default=hp.BATCH_SIZE, help="batch size")
     ap.add_argument("-e", "--epochs", type=int, default=hp.EPOCHS, help="number of epochs")
-    ap.add_argument("-m", "--model", type=str, default=T'output/model.pth', help="path to output trained model")
+    ap.add_argument("-m", "--model", type=str, default='output/model.pth', help="path to output trained model")
     ap.add_argument("-p", "--plot", type=str, default='output/plot.png', help="path to output loss plot")
     ap.add_argument("-t", "--train", type=bool, default=True, help="train the model")
     args = vars(ap.parse_args())  
