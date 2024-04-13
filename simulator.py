@@ -1,7 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from hyperparams import Hyperparameters as hp
 import torch
+
+from hyperparams import Hyperparameters as hp
 
 
 class CWSimulator():
@@ -10,8 +10,9 @@ class CWSimulator():
         self.max_t = max_t
         self.n = n
         self.N_TRAJ = N_TRAJ
-        self.times = torch.arange(0, self.max_t+dt, dt) # Time vector
         self.SEQUENCE_LENGTH = SEQUENCE_LENGTH
+
+        self.times = np.arange(0, self.max_t+dt, dt) # Time vector
 
     def relative_position(self, X_i: np.ndarray, t: float) -> list[float]:
         x_0, y_0, z_0 = X_i[0:3]
@@ -37,6 +38,8 @@ class CWSimulator():
             return [x]
 
     def simulate_trajectories(self) -> np.ndarray:
+        print(f'[INFO] Simulating {self.N_TRAJ} trajectories...')
+
         pos_is = -25 + 10 * np.random.random((self.N_TRAJ,3))
         vel_is = 0.1 * np.zeros((self.N_TRAJ,3))  
         
@@ -44,5 +47,12 @@ class CWSimulator():
         X_is = np.concatenate((pos_is, vel_is), axis=1)
 
         X_t = np.asarray([[self.relative_position(X_i=X_i, t=t) for t in self.times] for X_i in X_is])
+
+        X_t = torch.tensor(X_t).float()
+
+        # if 2D, add a third dimension
+        if len(X_t.shape) == 2:
+            X_t = X_t.unsqueeze(2)
+        print(f'trajectories shape: {X_t.shape}')
 
         return X_t

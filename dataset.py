@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 class CWTrajDataset(Dataset):
     def __init__(self, trajectories: torch.Tensor, sequence_len: int, transform=None, target_transform=None, n_input_features: int=1, future_len: int=5):
         
+        print(f'[INFO] Creating dataset...')
         # self.trajectories = trajectories
         self.n_traj = trajectories.shape[0]
         self.traj_len = trajectories.shape[1]
@@ -28,6 +29,8 @@ class CWTrajDataset(Dataset):
                 
         self.transform = transform
         self.target_transform = target_transform
+
+        print(f'[INFO] Training dataset size: {len(self)}')
 
     def __len__(self):
         return len(self.inputs)
