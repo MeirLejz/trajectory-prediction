@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from hyperparams import Hyperparameters as hp
+from ml_pipeline.hyperparams import Hyperparameters as hp
 
 
 class CWSimulator():

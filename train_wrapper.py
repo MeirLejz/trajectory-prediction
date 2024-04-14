@@ -9,10 +9,10 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 # from sklearn.preprocessing import MinMaxScaler
 
-from trainer import Trainer
-from dataset import CWTrajDataset
+from ml_pipeline.trainer import Trainer
+from ml_pipeline.traj_dataset import CWTrajDataset
 from simulator import CWSimulator
-from hyperparams import Hyperparameters as hp
+from ml_pipeline.hyperparams import Hyperparameters as hp
 
 from models.encod_decod_lstm import LSTM_seq2seq
 

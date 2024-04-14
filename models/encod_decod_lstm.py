@@ -1,8 +1,7 @@
 import torch.nn as nn
 import torch
 import random
-import pdb
-from hyperparams import Hyperparameters as hp
+from ml_pipeline.hyperparams import Hyperparameters as hp
 class LSTM_Encoder(nn.Module):
     
     """ Encoder module for seq2seq LSTM. Encodes input sequence into hidden states. """
@@ -106,6 +105,7 @@ class LSTM_seq2seq(nn.Module):
         for t in range(self.target_len):
             decoder_output, decoder_hidden = self.decoder(decoder_input, decoder_hidden)
             decoder_input = decoder_output
+            import pdb; pdb.set_trace()
             outputs[:,t,:] = decoder_output
 
         return outputs

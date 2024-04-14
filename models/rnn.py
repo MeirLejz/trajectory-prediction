@@ -24,5 +24,10 @@ class LSTM(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
         out = self.linear(out[:, -1, :]).unsqueeze(2)
 
+        # self.fc = nn.Linear(hidden_size*(1+int(bidirectional)), output_length*num_of_output_features)
+        # output = output[:, -1, :]
+        # output = self.fc(output)
+        # output = output.view(-1, self.OUTPUT_LENGTH, self.NUM_OUT_FEATURES)
+        
         return out
     
