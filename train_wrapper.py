@@ -8,6 +8,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
 from sklearn.preprocessing import MinMaxScaler
+import joblib
 
 from ml_pipeline.trainer import Trainer
 from ml_pipeline.traj_dataset import CWTrajDataset
@@ -85,7 +86,6 @@ def main():
 
     train_dataloader = DataLoader(training_dataset, batch_size=hp.BATCH_SIZE, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=hp.BATCH_SIZE)
-
     
     model = LSTM_seq2seq(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, num_layers=hp.NUM_LAYERS, target_len=hp.N_FUTURE_STEPS).to(device)
     # model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=hp.N_FUTURE_STEPS, num_layers=hp.NUM_LAYERS).to(device)
@@ -114,6 +114,7 @@ def main():
 
     plot_results(history=H, path=args["plot"])
     torch.save(obj=model, f=args["model"])
+    joblib.dump(scaler, 'output/scaler.gz')
 
     import pdb; pdb.set_trace()
 
