@@ -17,20 +17,20 @@ class CWTrajDataset(Dataset):
         self.inputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.sequence_len, n_input_features))
         self.outputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.future_len, n_input_features))
 
-        maxes, _ = torch.max(abs(trajectories), axis=1)
-        self.bounds, _ = torch.max(maxes, axis=0)
+        # maxes, _ = torch.max(abs(trajectories), axis=1)
+        # self.bounds, _ = torch.max(maxes, axis=0)
 
-        self.trajectories = trajectories / self.bounds
+        # self.trajectories = trajectories / self.bounds
 
         for j in range(self.n_traj):
             for k in range(self.traj_len - self.sequence_len - self.future_len - 1):
-                self.inputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = self.trajectories[j, k:(k + self.sequence_len), :]
-                self.outputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = self.trajectories[j, (k + self.sequence_len): (k + self.sequence_len + self.future_len), :]
+                self.inputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = trajectories[j, k:(k + self.sequence_len), :]
+                self.outputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = trajectories[j, (k + self.sequence_len): (k + self.sequence_len + self.future_len), :]
                 
         self.transform = transform
         self.target_transform = target_transform
 
-        print(f'[INFO] Training dataset size: {len(self)}')
+        print(f'[INFO] dataset size: {len(self)}')
 
     def __len__(self):
         return len(self.inputs)

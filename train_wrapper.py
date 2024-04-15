@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
-# from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 
 from ml_pipeline.trainer import Trainer
 from ml_pipeline.traj_dataset import CWTrajDataset
@@ -15,14 +15,6 @@ from simulator import CWSimulator
 from ml_pipeline.hyperparams import Hyperparameters as hp
 
 from models.encod_decod_lstm import LSTM_seq2seq
-
-# # define scaler
-# scaler = MinMaxScaler()
-# # fit scaler on the training dataset
-# scaler.fit(X_train)
-# # transform both datasets
-# X_train_scaled = scaler.transform(X_train)
-# X_test_scaled = scaler.transform(X_test)
 
 def plot_results(history: dict, path: str) -> None:
     plt.style.use("ggplot")
@@ -73,13 +65,28 @@ def main():
     simulator = CWSimulator(dt=hp.dt, max_t=hp.max_t, n=hp.n, N_TRAJ=hp.N_TRAJ, SEQUENCE_LENGTH=hp.SEQUENCE_LENGTH)
     trajectories = simulator.simulate_trajectories()
 
+    # define scaler
+    scaler = MinMaxScaler()
+
     train_split = int(trajectories.shape[0] * hp.TRAIN_SPLIT)
-    training_data = CWTrajDataset(trajectories=trajectories[:train_split], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
-    val_data = CWTrajDataset(trajectories=trajectories[train_split:], sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
 
-    train_dataloader = DataLoader(training_data, batch_size=hp.BATCH_SIZE, shuffle=True)
-    val_dataloader = DataLoader(val_data, batch_size=hp.BATCH_SIZE)
+    training_trajectories = trajectories[:train_split]
+    validation_trajectories = trajectories[train_split:]
 
+    nTrajs_train, trajLen, nFeatures = training_trajectories.shape
+    nTrajs_val, _, _ = validation_trajectories.shape
+
+    scaler.fit(training_trajectories.view(-1, nFeatures))
+    training_trajectories = torch.Tensor(scaler.transform(training_trajectories.view(-1, nFeatures)).reshape(nTrajs_train, trajLen, nFeatures))
+    validation_trajectories = torch.Tensor(scaler.transform(validation_trajectories.view(-1, nFeatures)).reshape(nTrajs_val, trajLen, nFeatures))
+
+    training_dataset = CWTrajDataset(trajectories=training_trajectories, sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
+    val_dataset = CWTrajDataset(trajectories=validation_trajectories, sequence_len=simulator.SEQUENCE_LENGTH, n_input_features=hp.N_INPUT_FEATURES, future_len=hp.N_FUTURE_STEPS)
+
+    train_dataloader = DataLoader(training_dataset, batch_size=hp.BATCH_SIZE, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=hp.BATCH_SIZE)
+
+    
     model = LSTM_seq2seq(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, num_layers=hp.NUM_LAYERS, target_len=hp.N_FUTURE_STEPS).to(device)
     # model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=hp.N_FUTURE_STEPS, num_layers=hp.NUM_LAYERS).to(device)
     

@@ -27,5 +27,5 @@ class Hyperparameters:
     dt = 20 # seconds. Time step
     T = 60 * 60 # seconds. Period of the orbit
     n = 2 * torch.pi / T # rad/s. Orbital rate
-    N_TRAJ = 300 # Number of trajectories
+    N_TRAJ = 10 # Number of trajectories
     max_t = T # seconds. Maximum time to simulate

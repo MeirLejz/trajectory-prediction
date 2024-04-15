@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 import random
 from ml_pipeline.hyperparams import Hyperparameters as hp
+
 class LSTM_Encoder(nn.Module):
     
     """ Encoder module for seq2seq LSTM. Encodes input sequence into hidden states. """
