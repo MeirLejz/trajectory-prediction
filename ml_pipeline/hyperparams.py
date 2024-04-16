@@ -7,8 +7,8 @@ class Hyperparameters:
     # training flow hyperparameters
     INIT_LR: float = 1e-3
     BATCH_SIZE: int = 32
-    EPOCHS: int = 20
-    MILESTONES = [5, 10, 90]
+    EPOCHS: int = 60
+    MILESTONES = [5, 10, 30]
 
     # datasets hyperparameters
     TRAIN_SPLIT: float = 0.75
@@ -17,7 +17,7 @@ class Hyperparameters:
     # model hyperparameters
     HIDDEN_SIZE: int = 64
     NUM_LAYERS: int = 2
-    N_INPUT_FEATURES: int = 2 # 3D input
+    N_INPUT_FEATURES: int = 3 # 3D input
     N_FUTURE_STEPS: int = 15
     SEQUENCE_LENGTH: int = 30
     TEACHER_FORCING: bool = True

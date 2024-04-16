@@ -19,7 +19,7 @@ def get_device() -> torch.device:
     print(f'[INFO] Using device: {device}')
     return device
 
-N_TRAJ_TEST = 1
+N_TRAJ_TEST = 3
 
 def main():
     
@@ -49,8 +49,8 @@ def main():
 
                 rnn_input = trajectories[j, k - seq_length:k, :].unsqueeze(0)
                 rnn_input_scaled = torch.Tensor(scaler.transform(rnn_input.view(-1, hp.N_INPUT_FEATURES))).view(1,seq_length,hp.N_INPUT_FEATURES)
-                output = model.predict(rnn_input_scaled.to(device))
-                output_unscaled = torch.Tensor(scaler.inverse_transform(output.view(-1, hp.N_INPUT_FEATURES))).view(1,hp.N_FUTURE_STEPS,hp.N_INPUT_FEATURES)
+                output = model(rnn_input_scaled.to(device)) # model.predict() for seq2seq LSTM
+                output_unscaled = torch.Tensor(scaler.inverse_transform(output.cpu().view(-1, hp.N_INPUT_FEATURES))).view(1,hp.N_FUTURE_STEPS,hp.N_INPUT_FEATURES)
                 ynn[j, k:k+hp.N_FUTURE_STEPS, :] = output_unscaled.numpy()
 
     ax = plt.figure().add_subplot(projection=None if hp.N_INPUT_FEATURES == 1 else '3d')

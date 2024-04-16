@@ -16,6 +16,7 @@ from simulator import CWSimulator
 from ml_pipeline.hyperparams import Hyperparameters as hp
 
 from models.encod_decod_lstm import LSTM_seq2seq
+from models.rnn import LSTM
 
 def plot_results(history: dict, path: str) -> None:
     plt.style.use("ggplot")
@@ -87,8 +88,8 @@ def main():
     train_dataloader = DataLoader(training_dataset, batch_size=hp.BATCH_SIZE, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=hp.BATCH_SIZE)
     
-    model = LSTM_seq2seq(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, num_layers=hp.NUM_LAYERS, target_len=hp.N_FUTURE_STEPS).to(device)
-    # model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, output_size=hp.N_FUTURE_STEPS, num_layers=hp.NUM_LAYERS).to(device)
+    # model = LSTM_seq2seq(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, num_layers=hp.NUM_LAYERS, target_len=hp.N_FUTURE_STEPS).to(device)
+    model = LSTM(input_size=hp.N_INPUT_FEATURES, hidden_size=hp.HIDDEN_SIZE, num_layers=hp.NUM_LAYERS).to(device)
     
     loss_fn = nn.MSELoss()
     optimizer = Adam(model.parameters(), lr=hp.INIT_LR) # 

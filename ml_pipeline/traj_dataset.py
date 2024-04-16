@@ -1,6 +1,6 @@
-import numpy as np
 import torch
 from torch.utils.data import Dataset
+import pdb
 
 
 class CWTrajDataset(Dataset):
@@ -23,9 +23,10 @@ class CWTrajDataset(Dataset):
         # self.trajectories = trajectories / self.bounds
 
         for j in range(self.n_traj):
-            for k in range(self.traj_len - self.sequence_len - self.future_len - 1):
+            for k in range(self.traj_len - self.sequence_len - self.future_len):
                 self.inputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = trajectories[j, k:(k + self.sequence_len), :]
                 self.outputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = trajectories[j, (k + self.sequence_len): (k + self.sequence_len + self.future_len), :]
+                pdb.set_trace()
                 
         self.transform = transform
         self.target_transform = target_transform

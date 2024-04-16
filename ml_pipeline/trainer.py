@@ -2,7 +2,7 @@ from torch import torch, nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torchmetrics.functional import r2_score
-
+import pdb
 class Trainer():
 
     def __init__(self, model: nn.Module, loss_fn, optimizer: Optimizer, device: torch.device) -> None:
@@ -20,10 +20,11 @@ class Trainer():
         self.model.train()
 
         for batch, (X, y) in enumerate(dataloader):
-            
+
             X, y = X.to(self.device), y.to(self.device)
 
-            pred = self.model(x=X, target=y).to(self.device)
+            # pred = self.model(x=X, target=y).to(self.device)
+            pred = self.model(x=X).to(self.device)
 
             loss = self.loss_fn(input=pred, target=y)
             acc = self.r2_score_acc(input=pred, target=y)
@@ -58,7 +59,9 @@ class Trainer():
             for (X, y) in dataloader:
 
                 X, y = X.to(self.device), y.to(self.device) # send input to device
-                pred = self.model(x=X, target=y).to(self.device) # forward pass
+                
+                # pred = self.model(x=X, target=y).to(self.device) # forward pass
+                pred = self.model(x=X).to(self.device)
 
                 loss = self.loss_fn(input=pred, target=y) # compute loss
                 acc = self.r2_score_acc(input=pred, target=y)
