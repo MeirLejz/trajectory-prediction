@@ -37,7 +37,7 @@ class CWSimulator():
         elif hp.N_INPUT_FEATURES == 1:
             return [x]
 
-    def simulate_trajectories(self) -> np.ndarray:
+    def simulate_trajectories(self) -> torch.Tensor:
         print(f'[INFO] Simulating {self.N_TRAJ} trajectories...')
 
         pos_is = -25 + 10 * np.random.random((self.N_TRAJ,3))

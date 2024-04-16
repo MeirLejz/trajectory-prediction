@@ -3,33 +3,38 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 import pdb
-from hyperparams import Hyperparameters as hp
-
+from ml_pipeline.hyperparams import Hyperparameters as hp
+from sklearn.preprocessing import MinMaxScaler
+import joblib
 
 def load_model(path: str = './output/model.pth') -> torch.nn.Module:
-    model = torch.load(path)
-    return model
+    return torch.load(path)
+    
 
-def main():
+def load_scaler(path: str = 'output/scaler.gz') -> MinMaxScaler:
+    return joblib.load(path)
 
-    # looking for gpu
+def get_device() -> torch.device:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f'[INFO] Using device: {device}')
+    return device
+
+N_TRAJ_TEST = 1
+
+def main():
+    
+    device = get_device()
 
     # Load the model
     model = load_model(path='./output/model.pth')
+    scaler = load_scaler(path='./output/scaler.gz')
+    
+    # prediction only
     model.eval()
 
-    simulator = CWSimulator(dt=hp.dt, max_t=hp.max_t, n=hp.n, N_TRAJ=1, SEQUENCE_LENGTH=hp.SEQUENCE_LENGTH)
-    # Create test data from simulator.py
+    # simulate a test dataset from the same feature distribution
+    simulator = CWSimulator(dt=hp.dt, max_t=hp.max_t, n=hp.n, N_TRAJ=N_TRAJ_TEST, SEQUENCE_LENGTH=hp.SEQUENCE_LENGTH)
     trajectories = simulator.simulate_trajectories()
-
-    trajectories = torch.tensor(trajectories).float()
-
-    # if 2D, add a third dimension
-    if len(trajectories.shape) == 2:
-        trajectories = trajectories.unsqueeze(2)
-    print(f'trajectories shape: {trajectories.shape}')
 
     seq_length = simulator.SEQUENCE_LENGTH
 
@@ -43,11 +48,10 @@ def main():
                 # rnn_input = torch.tensor(ynn[j, k - seq_length:k, :]).float().unsqueeze(0)
 
                 rnn_input = trajectories[j, k - seq_length:k, :].unsqueeze(0)
-                bounds, _ = torch.max(abs(rnn_input), axis=1)
-                rnn_input = rnn_input / bounds
-                import pdb; pdb.set_trace()
-                output = model.predict(rnn_input.to(device))
-                ynn[j, k:k+hp.N_FUTURE_STEPS, :] = (output * bounds).numpy() #  
+                rnn_input_scaled = torch.Tensor(scaler.transform(rnn_input.view(-1, hp.N_INPUT_FEATURES))).view(1,seq_length,hp.N_INPUT_FEATURES)
+                output = model.predict(rnn_input_scaled.to(device))
+                output_unscaled = torch.Tensor(scaler.inverse_transform(output.view(-1, hp.N_INPUT_FEATURES))).view(1,hp.N_FUTURE_STEPS,hp.N_INPUT_FEATURES)
+                ynn[j, k:k+hp.N_FUTURE_STEPS, :] = output_unscaled.numpy()
 
     ax = plt.figure().add_subplot(projection=None if hp.N_INPUT_FEATURES == 1 else '3d')
     for j in range(simulator.N_TRAJ):
@@ -63,7 +67,6 @@ def main():
             ax.plot(0,0, color='k')
 
         elif hp.N_INPUT_FEATURES == 2:
-            trajectories /= bounds
             x, y = trajectories[j,:,:].squeeze().T.numpy()
             ax.plot(x, y, linewidth=1,marker='o')
             ax.scatter(x[0], y[0], color='r')
