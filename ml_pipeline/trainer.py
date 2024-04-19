@@ -21,6 +21,7 @@ class Trainer():
 
         for batch, (X, y) in enumerate(dataloader):
 
+
             X, y = X.to(self.device), y.to(self.device)
 
             # pred = self.model(x=X, target=y).to(self.device)

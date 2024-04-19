@@ -28,8 +28,9 @@ def plot_results(history: dict, path: str) -> None:
     plt.xlabel("Epoch #")
     plt.ylabel("Loss")
     plt.legend()
-    plt.show()
     plt.savefig(path)
+    plt.show()
+    
 
 # itera = iter(train_dataloader)
 # X, y = next(itera)

@@ -47,11 +47,14 @@ def main():
             for k in range(seq_length, len(simulator.times) - hp.N_FUTURE_STEPS, hp.N_FUTURE_STEPS):
                 # rnn_input = torch.tensor(ynn[j, k - seq_length:k, :]).float().unsqueeze(0)
 
-                rnn_input = trajectories[j, k - seq_length:k, :].unsqueeze(0)
+                rnn_input = torch.Tensor(trajectories[j, k - seq_length:k, :]).unsqueeze(0) # trajectories[...]
                 rnn_input_scaled = torch.Tensor(scaler.transform(rnn_input.view(-1, hp.N_INPUT_FEATURES))).view(1,seq_length,hp.N_INPUT_FEATURES)
                 output = model(rnn_input_scaled.to(device)) # model.predict() for seq2seq LSTM
                 output_unscaled = torch.Tensor(scaler.inverse_transform(output.cpu().view(-1, hp.N_INPUT_FEATURES))).view(1,hp.N_FUTURE_STEPS,hp.N_INPUT_FEATURES)
                 ynn[j, k:k+hp.N_FUTURE_STEPS, :] = output_unscaled.numpy()
+
+    N_steps = int(hp.T/hp.dt)
+
 
     ax = plt.figure().add_subplot(projection=None if hp.N_INPUT_FEATURES == 1 else '3d')
     for j in range(simulator.N_TRAJ):
@@ -77,11 +80,11 @@ def main():
 
         elif hp.N_INPUT_FEATURES == 3:
             x, y, z = trajectories[j,:,:].squeeze().T.numpy()
-            ax.plot(x, y, z, linewidth=1,marker='o')
+            ax.plot(x, y, z, linewidth=1) # [:N_steps]
             ax.scatter(x[0], y[0], z[0], color='r')
             x_, y_, z_ = ynn[j,:,:].squeeze().T
-            ax.plot(x_, y_, z_, linewidth=1, linestyle='--', marker='x')
-            ax.scatter(x_[seq_length], y_[seq_length], z_[seq_length], color='m')
+            ax.scatter(x_, y_, z_, linewidth=1, linestyle='--', marker='x')
+            # ax.scatter(x_[seq_length], y_[seq_length], z_[seq_length], color='m')
             ax.scatter(0,0,0, color='k')
 
     plt.show()

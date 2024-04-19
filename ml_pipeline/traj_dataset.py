@@ -14,19 +14,18 @@ class CWTrajDataset(Dataset):
         self.n_input_features = n_input_features
         self.future_len = future_len    
 
-        self.inputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.sequence_len, n_input_features))
-        self.outputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - 1), self.future_len, n_input_features))
+        self.inputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - self.future_len), self.sequence_len, n_input_features))
+        self.outputs = torch.zeros((self.n_traj * (self.traj_len - self.sequence_len - self.future_len), self.future_len, n_input_features))
 
         # maxes, _ = torch.max(abs(trajectories), axis=1)
         # self.bounds, _ = torch.max(maxes, axis=0)
 
         # self.trajectories = trajectories / self.bounds
 
-        for j in range(self.n_traj):
+        for jj in range(self.n_traj):
             for k in range(self.traj_len - self.sequence_len - self.future_len):
-                self.inputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = trajectories[j, k:(k + self.sequence_len), :]
-                self.outputs[j * (self.traj_len - self.sequence_len - self.future_len - 1) + k, :, :] = trajectories[j, (k + self.sequence_len): (k + self.sequence_len + self.future_len), :]
-                pdb.set_trace()
+                self.inputs[jj * (self.traj_len - self.sequence_len - self.future_len) + k, :, :] = trajectories[jj, k:(k + self.sequence_len), :]
+                self.outputs[jj * (self.traj_len - self.sequence_len - self.future_len) + k, :, :] = trajectories[jj, (k + self.sequence_len): (k + self.sequence_len + self.future_len), :]
                 
         self.transform = transform
         self.target_transform = target_transform

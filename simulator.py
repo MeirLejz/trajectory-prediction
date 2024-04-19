@@ -30,18 +30,19 @@ class CWSimulator():
             + (y_0 + 2 * vx_0 / self.n)
         )
         z = z_0 * np.cos(self.n * t) + vz_0 / self.n * np.sin(self.n * t)
+
         if hp.N_INPUT_FEATURES == 3:
-            return [x,y,z]
+            return [x,y,z] + np.random.normal(0,2,3)
         elif hp.N_INPUT_FEATURES == 2:
-            return [x,y]
+            return [x,y] + np.random.normal(0,2,2)
         elif hp.N_INPUT_FEATURES == 1:
-            return [x]
+            return [x] + np.random.normal(0,2) 
 
     def simulate_trajectories(self) -> torch.Tensor:
         print(f'[INFO] Simulating {self.N_TRAJ} trajectories...')
 
-        pos_is = -25 + 10 * np.random.random((self.N_TRAJ,3))
-        vel_is = 0.1 * np.zeros((self.N_TRAJ,3))  
+        pos_is = -25 + 50 * np.random.random((self.N_TRAJ,3))
+        vel_is = -2.5 + 5 * np.random.random((self.N_TRAJ,3))  
         
         # Concatenate pos_i and vel_i along the 2nd dimension
         X_is = np.concatenate((pos_is, vel_is), axis=1)
